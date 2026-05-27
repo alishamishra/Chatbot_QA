@@ -1,0 +1,28 @@
+services:
+  embeddings:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ~/.cache/huggingface:/data
+    command: --model-id sentence-transformers/all-mpnet-base-v2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    depends_on:
+      embeddings:
+        condition: service_healthy
+    environment:
+      - EMBEDDINGS_URL=http://embeddings:80/v1
+    volumes:
+      - ./:/app

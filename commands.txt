@@ -1,0 +1,80 @@
+to start vllm embedding server command
+✅ Fix: remove serve
+
+Try this instead:
+
+docker run \
+  -p 8000:8000 \
+  -v ~/.cache/huggingface:/root/.cache/huggingface \
+  --ipc=host \
+  vllm/vllm-openai-cpu:latest-x86_64 \
+  --model sentence-transformers/all-MiniLM-L6-v2
+⚠️ But you still have a bigger issue
+
+Even if this runs, it will likely fail or behave incorrectly, because:
+
+👉 sentence-transformers/all-MiniLM-L6-v2 is an embedding model
+👉 vllm-openai server expects a text generation model✅ Fix: remove serve
+
+next to check if we ca ping the server and the response
+curl http://localhost:8000/v1/embeddings   -H "Content-Type: application/json"   -d '{
+    "input": "Local embedding test",
+    "model": "sentence-transformers/all-MiniLM-L6-v2"
+  }'
+ 
+below model give max token 512 which is working good
+docker run \
+  -p 8080:80 \
+  -v ~/.cache/huggingface:/data \
+  ghcr.io/huggingface/text-embeddings-inference:cpu-latest \
+  --model-id sentence-transformers/all-mpnet-base-v2
+
+
+next to check if we can ping the server and the response
+curl http://localhost:8080/v1/embeddings \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": "Hello world",
+    "model": "sentence-transformers/all-mpnet-base-v2"
+  }'
+
+ Local URL: http://localhost:8501
+  Network URL: http://192.168.1.2:8501
+
+docker command :
+pratik@pratik-Nitro-AN515-54:~$ docker run -it -v /home/pratik/Desktop/alisha_repo/Pdf_QA_chatbot:/home/pratik/Desktop/alisha_repo/Pdf_QA_chatbot python:3.13 bash
+f
+or python 3.13
+docker run -it -v /home/pratik/Desktop/alisha_repo:/home/pratik/Desktop/alisha_repo python:3.13 bash
+
+
+install
+pip install -U langchain-openai
+pip install -U langchain-community faiss-cpu
+pip install docling
+pip install -U langgraph "langchain[openai]" langchain-community langchain-text-splitters bs4
+pip install -U langchain-text-splitters
+pip install streamlit
+pip install -U langchain-huggingface
+pip install langchain-huggingface sentence_transformers
+pip install -U langgraph
+pip install langgraph-checkpoint
+pip install langgraph-prebuilt
+pip install langgraph-sdk
+
+
+  embedding-service:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ~/.cache/huggingface:/data
+    command: --model-id sentence-transformers/all-mpnet-base-v2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/embeddings"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+
